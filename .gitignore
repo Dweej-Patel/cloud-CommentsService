@@ -2,3 +2,4 @@ aws/
 .idea/
 awscliv2.zip
 venvpuppy/
+__pycache__/

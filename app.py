@@ -27,17 +27,17 @@ logger.setLevel(logging.DEBUG)
 
 # Create the application server main class instance and call it 'application'
 # Specific the path that identifies the static content and where it is.
-app = Flask(__name__, static_url_path='/static', static_folder='./static')
+application = Flask(__name__, static_url_path='/static', static_folder='./static')
 
 
-@app.route('/')
+@application.route('/')
 def hello_world():
-    rsp = app.send_static_file('index.html')
+    rsp = application.send_static_file('index.html')
     return rsp
 
 
 # This function performs a basic health check. We will flesh this out.
-@app.route("/api/health", methods=["GET"])
+@application.route("/api/health", methods=["GET"])
 def health_check():
 
     pf = platform.system()
@@ -63,4 +63,4 @@ def health_check():
 
 
 if __name__ == '__main__':
-    app.run()
+    application.run()

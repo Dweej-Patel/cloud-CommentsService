@@ -1,7 +1,7 @@
 import uuid
 from app import application
 import boto3
-from flask import Flask
+from flask import Flask, request
 from datetime import datetime
 
 # Get the service resource.
@@ -22,33 +22,57 @@ table = dynamodb.Table('Comments')
 # Add new comment to table
 @application.route("/api/comments", methods=["POST"])
 def createComment():
+    data = request.json()
     now = datetime.now()
     current_time = now.strftime('%Y-%m-%d %H:%M:%S')
     table.put_item(
        Item={
             'Comment_ID': str(uuid.uuid4()),
-            'Comment_text': 'librum ipsum',
-            'Email': 'dweejuschrist@faith.church',
+            'Comment_text': data['Comment_text'],
+            'Email': data['Email'],
             'Datetime': current_time,
-            'Tags': ['25', 'dweej', 'patel'],
-            'Version_ID': str(uuid.uuid4()),
+            'Tags': data['Tags'],
+            'Version_ID': str(uuid.uuid4())
         }
     )
 
 # Get a comment
-def getCommentByID(id):
+@application.route("/api/comments/<comment-id>", methods=["GET"])
+def getCommentByID(comment_id):
     response = table.get_item(
         Key={
-            'Comment_ID': id
+            'Comment_ID': comment_id
         }
     )
     item = response['Item']
     print(item)
 
 # Get item by email
+@application.route("/api/comments", methods=["GET"])
+def getCommentByEmailOrTag():
+    query = request.query_string().decode()
+    print(query)
+    queryRequests = query.split('&')
+    for item in queryRequests:
+        label = item.split('=')
+        if label[0] == 'Email':
+            return getCommentByEmail(label[1])
+        elif label[0] == 'Tags':
+            return getCommentByTag(label[1])
+        else:
+            res = 'Invalid query string'
+            return res
+
+
 def getCommentByEmail(email):
-    res = findByTemplate({'Email': email})
-    print(res)
+    template = {'Email': email}
+    fe = ' AND '.join(['{0}=:{0}'.format(k) for k, v in template.items()])
+    ea = {':{}'.format(k): v for k, v in template.items()}
+    # fe = Attr('Tag').contains(['25'])
+    print(ea)
+    result = table.scan(FilterExpression=fe,
+                        ExpressionAttributeValues=ea)
+    return result
 
 # Get item by tag
 def getCommentByTag(tag):
@@ -60,17 +84,6 @@ def getCommentByTag(tag):
                             ExpressionAttributeValues=expressionAttributes)
         print(result)
         return result
-
-
-# Find comment by given template
-def findByTemplate(template):
-    fe = ' AND '.join(['{0}=:{0}'.format(k) for k, v in template.items()])
-    ea = {':{}'.format(k): v for k, v in template.items()}
-    # fe = Attr('Tag').contains(['25'])
-    print(ea)
-    result = table.scan(FilterExpression=fe,
-                        ExpressionAttributeValues=ea)
-    return result
 
 def updateItem(id, version_id, comment, tags):
     try:
