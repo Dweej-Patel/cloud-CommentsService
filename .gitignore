@@ -3,3 +3,4 @@ aws/
 awscliv2.zip
 venvpuppy/
 __pycache__/
+credentials.sh
