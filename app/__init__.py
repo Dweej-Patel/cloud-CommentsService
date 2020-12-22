@@ -11,7 +11,8 @@ application = Flask(__name__,
 # Get the service resource.
 dynamodbResource = boto3.resource('dynamodb',
                           aws_access_key_id=ACCESS_ID,
-                          aws_secret_access_key=ACCESS_KEY)
+                          aws_secret_access_key=ACCESS_KEY,
+                          region_name='us-east-1')
 
 # Instantiate a table resource object without actually
 # creating a DynamoDB table. Note that the attributes of this table
